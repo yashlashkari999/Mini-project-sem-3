@@ -1,0 +1,2528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillBarter | Campus Time-Banking & Skill Exchange Network</title>
+  <!-- Tailwind CSS CDN with configuration -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              200: '#c7d2fe',
+              300: '#a5b4fc',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#312e81',
+            },
+            accent: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- React & ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <!-- Babel Standalone for JSX compilation in browser -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    h1, h2, h3, .font-heading {
+      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    @keyframes pulse-subtle {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.95; transform: scale(1.02); }
+    }
+    .animate-pulse-subtle {
+      animation: pulse-subtle 3s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+  <div id="root"></div>
+
+  <!-- Main React Application Script -->
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useRef } = React;
+
+    // --- SEED DATA & PERSONAS ---
+    const INITIAL_USERS = [
+      {
+        id: 'usr_aarav',
+        name: 'Aarav Sharma',
+        email: 'aarav.sharma@campus.edu',
+        major: 'Computer Science',
+        gradYear: '2025',
+        avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
+        bio: 'Senior CS student passionate about full-stack web dev, Python algorithms, and competitive programming. Eager to pick up acoustic guitar and Spanish conversational skills!',
+        creditBalance: 4,
+        rating: 4.9,
+        reviewsCount: 14,
+        sessionsTaught: 8,
+        sessionsLearned: 4,
+        badges: ['Top Mentor', 'Code Wizard', 'Punctual Scholar']
+      },
+      {
+        id: 'usr_elena',
+        name: 'Elena Rostova',
+        email: 'elena.rostova@campus.edu',
+        major: 'Fine Arts & Digital Media',
+        gradYear: '2026',
+        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+        bio: 'Junior specializing in UI/UX in Figma and 3D sculpting in Blender. Wanting to learn fundamental Data Structures and French conversation.',
+        creditBalance: 3,
+        rating: 5.0,
+        reviewsCount: 11,
+        sessionsTaught: 6,
+        sessionsLearned: 3,
+        badges: ['Design Master', 'Community Star']
+      },
+      {
+        id: 'usr_marcus',
+        name: 'Marcus Chen',
+        email: 'marcus.chen@campus.edu',
+        major: 'Business Analytics & Finance',
+        gradYear: '2027',
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+        bio: 'Sophomore helping peers with Financial Modeling, Advanced Excel, and Macroeconomics. Looking for personal fitness guidance and Python automation basics.',
+        creditBalance: 2,
+        rating: 4.8,
+        reviewsCount: 8,
+        sessionsTaught: 4,
+        sessionsLearned: 2,
+        badges: ['Finance Whiz', 'Consistent Helper']
+      },
+      {
+        id: 'usr_priya',
+        name: 'Priya Patel',
+        email: 'priya.patel@campus.edu',
+        major: 'Linguistics & Pre-Med',
+        gradYear: '2026',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+        bio: 'Fluent in Spanish & Hindi. Tutoring General Biology and Organic Chem. Excited to learn video editing for my campus medical club!',
+        creditBalance: 5,
+        rating: 4.95,
+        reviewsCount: 19,
+        sessionsTaught: 12,
+        sessionsLearned: 7,
+        badges: ['Polyglot', 'Top Academic Tutor']
+      }
+    ];
+
+    const INITIAL_SKILLS = [
+      {
+        id: 'sk_1',
+        userId: 'usr_aarav',
+        userName: 'Aarav Sharma',
+        userAvatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
+        userMajor: 'Computer Science',
+        userRating: 4.9,
+        type: 'teaching', // 'teaching' (earn credit) or 'learning' (seek tutor)
+        title: 'Full-Stack Web Development with React & Tailwind',
+        category: 'Programming & Tech',
+        level: 'Intermediate to Advanced',
+        description: 'Learn modern React hooks, state management, component architecture, and responsive Tailwind styling. I will walk you through building a real mini-project from scratch.',
+        location: 'Engineering Computer Lab 3 / Online',
+        availability: 'Tuesday & Thursday afternoons, Weekends',
+        creditsCost: 1,
+        createdAt: '2026-10-28T14:30:00Z'
+      },
+      {
+        id: 'sk_2',
+        userId: 'usr_elena',
+        userName: 'Elena Rostova',
+        userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+        userMajor: 'Fine Arts & Digital Media',
+        userRating: 5.0,
+        type: 'teaching',
+        title: 'Figma UI/UX Prototyping & Design Systems',
+        category: 'Design & Arts',
+        level: 'All Levels',
+        description: 'Master wireframing, interactive micro-animations, typography, and building reusable design system components in Figma. Perfect for app and web projects!',
+        location: 'Design Studio B or Campus Quad Cafe',
+        availability: 'Monday & Wednesday 4:00 PM - 7:00 PM',
+        creditsCost: 1,
+        createdAt: '2026-10-29T10:15:00Z'
+      },
+      {
+        id: 'sk_3',
+        userId: 'usr_priya',
+        userName: 'Priya Patel',
+        userAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+        userMajor: 'Linguistics & Pre-Med',
+        userRating: 4.95,
+        type: 'teaching',
+        title: 'Conversational Spanish & Grammar Essentials',
+        category: 'Languages',
+        level: 'Beginner to Intermediate',
+        description: 'Practical daily speaking practice, pronunciation drill, verb conjugations, and cultural context. Great for travel, academic requirements, or personal growth.',
+        location: 'Main University Library 2nd Floor Quiet Zone',
+        availability: 'Weekday mornings 9:00 AM - 11:30 AM',
+        creditsCost: 1,
+        createdAt: '2026-10-30T16:00:00Z'
+      },
+      {
+        id: 'sk_4',
+        userId: 'usr_marcus',
+        userName: 'Marcus Chen',
+        userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+        userMajor: 'Business Analytics & Finance',
+        userRating: 4.8,
+        type: 'teaching',
+        title: 'Advanced Microsoft Excel & Financial Modeling',
+        category: 'Academic & Tutoring',
+        level: 'Intermediate',
+        description: 'VLOOKUP/XLOOKUP, INDEX-MATCH, Pivot Tables, dynamic charts, and financial discounted cash flow (DCF) models for business and economics courses.',
+        location: 'Business School Atrium / Discord',
+        availability: 'Friday afternoons & Saturday',
+        creditsCost: 1,
+        createdAt: '2026-11-01T11:20:00Z'
+      },
+      {
+        id: 'sk_5',
+        userId: 'usr_aarav',
+        userName: 'Aarav Sharma',
+        userAvatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
+        userMajor: 'Computer Science',
+        userRating: 4.9,
+        type: 'learning',
+        title: 'Seeking Tutor: Acoustic Guitar Fingerpicking & Chords',
+        category: 'Music & Creative',
+        level: 'Absolute Beginner',
+        description: 'I bought an acoustic guitar and want to learn basic chord transitions (C, G, Em, Am, D) and basic strumming/fingerpicking patterns. Will barter 1 credit/hr!',
+        location: 'Student Activity Center Music Rooms',
+        availability: 'Evenings after 6:00 PM',
+        creditsCost: 1,
+        createdAt: '2026-11-02T18:00:00Z'
+      },
+      {
+        id: 'sk_6',
+        userId: 'usr_elena',
+        userName: 'Elena Rostova',
+        userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+        userMajor: 'Fine Arts & Digital Media',
+        userRating: 5.0,
+        type: 'learning',
+        title: 'Seeking Tutor: Python Data Structures & Algorithmic Logic',
+        category: 'Programming & Tech',
+        level: 'Beginner',
+        description: 'Need help understanding arrays, dictionaries, loops, and recursive thinking for an interactive media art installation script.',
+        location: 'Campus Library or Google Meet',
+        availability: 'Flexible on weekends',
+        creditsCost: 1,
+        createdAt: '2026-11-03T12:00:00Z'
+      },
+      {
+        id: 'sk_7',
+        userId: 'usr_priya',
+        userName: 'Priya Patel',
+        userAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+        userMajor: 'Linguistics & Pre-Med',
+        userRating: 4.95,
+        type: 'teaching',
+        title: 'Organic Chemistry I & Reaction Mechanisms Tutor',
+        category: 'Academic & Tutoring',
+        level: 'College Undergraduate',
+        description: 'Clear breakdown of SN1/SN2, E1/E2 mechanisms, stereochemistry, and synthesis reaction maps. Scored an A+ and would love to help you ace your midterms!',
+        location: 'Science Building Study Lounge 410',
+        availability: 'Wednesday & Friday 2:00 PM - 5:00 PM',
+        creditsCost: 1,
+        createdAt: '2026-11-04T09:30:00Z'
+      },
+      {
+        id: 'sk_8',
+        userId: 'usr_marcus',
+        userName: 'Marcus Chen',
+        userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+        userMajor: 'Business Analytics & Finance',
+        userRating: 4.8,
+        type: 'learning',
+        title: 'Seeking Workout Partner / Strength Training Form Coach',
+        category: 'Fitness & Wellness',
+        level: 'Beginner to Intermediate',
+        description: 'Looking for an experienced student to coach proper barbell deadlift and squat form at the campus recreation center. 1 credit per session!',
+        location: 'Campus Recreation Center Gym',
+        availability: 'Monday / Thursday 7:00 AM - 8:30 AM',
+        creditsCost: 1,
+        createdAt: '2026-11-05T15:45:00Z'
+      }
+    ];
+
+    const INITIAL_LEDGER = [
+      {
+        id: 'tx_101',
+        userId: 'usr_aarav',
+        type: 'credit_bonus',
+        amount: 3,
+        description: 'Welcome Time-Bank Grant for Campus Verification',
+        partnerName: 'SkillBarter Campus Network',
+        sessionId: 'SYS-WELCOME',
+        timestamp: '2026-10-20T08:00:00Z',
+        balanceAfter: 3,
+        status: 'settled'
+      },
+      {
+        id: 'tx_102',
+        userId: 'usr_aarav',
+        type: 'credit_earned',
+        amount: 1,
+        description: 'Taught "Python Basics & Algorithms" to Marcus Chen',
+        partnerName: 'Marcus Chen',
+        sessionId: 'ses_901',
+        timestamp: '2026-10-25T16:30:00Z',
+        balanceAfter: 4,
+        status: 'settled'
+      },
+      {
+        id: 'tx_103',
+        userId: 'usr_aarav',
+        type: 'credit_spent',
+        amount: -1,
+        description: 'Learned "Figma UI Prototyping" from Elena Rostova',
+        partnerName: 'Elena Rostova',
+        sessionId: 'ses_902',
+        timestamp: '2026-10-27T14:00:00Z',
+        balanceAfter: 3,
+        status: 'settled'
+      },
+      {
+        id: 'tx_104',
+        userId: 'usr_aarav',
+        type: 'credit_earned',
+        amount: 1,
+        description: 'Taught "React Hooks & State Management" to Priya Patel',
+        partnerName: 'Priya Patel',
+        sessionId: 'ses_903',
+        timestamp: '2026-11-04T11:00:00Z',
+        balanceAfter: 4,
+        status: 'settled'
+      },
+      // Elena's initial transactions
+      {
+        id: 'tx_201',
+        userId: 'usr_elena',
+        type: 'credit_bonus',
+        amount: 3,
+        description: 'Welcome Time-Bank Grant for Campus Verification',
+        partnerName: 'SkillBarter Campus Network',
+        sessionId: 'SYS-WELCOME',
+        timestamp: '2026-10-21T09:00:00Z',
+        balanceAfter: 3,
+        status: 'settled'
+      },
+      {
+        id: 'tx_202',
+        userId: 'usr_elena',
+        type: 'credit_earned',
+        amount: 1,
+        description: 'Taught "Figma UI Prototyping" to Aarav Sharma',
+        partnerName: 'Aarav Sharma',
+        sessionId: 'ses_902',
+        timestamp: '2026-10-27T14:00:00Z',
+        balanceAfter: 4,
+        status: 'settled'
+      },
+      {
+        id: 'tx_203',
+        userId: 'usr_elena',
+        type: 'credit_spent',
+        amount: -1,
+        description: 'Learned "Spanish Conversational Prep" from Priya Patel',
+        partnerName: 'Priya Patel',
+        sessionId: 'ses_904',
+        timestamp: '2026-11-01T17:30:00Z',
+        balanceAfter: 3,
+        status: 'settled'
+      }
+    ];
+
+    const INITIAL_SESSIONS = [
+      {
+        id: 'ses_active_1',
+        skillId: 'sk_1',
+        skillTitle: 'Full-Stack Web Development with React & Tailwind',
+        teacherId: 'usr_aarav',
+        teacherName: 'Aarav Sharma',
+        teacherAvatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
+        learnerId: 'usr_marcus',
+        learnerName: 'Marcus Chen',
+        learnerAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+        status: 'confirmed', // 'pending', 'confirmed', 'completed', 'declined'
+        scheduledDate: '2026-11-12',
+        scheduledTime: '15:30',
+        durationHours: 1,
+        locationType: 'in-person',
+        locationDetails: 'Main Campus Library, Group Study Room 4A',
+        notes: 'Help building an analytics dashboard frontend with responsive charts.',
+        creditAmount: 1,
+        createdAt: '2026-11-06T10:00:00Z'
+      },
+      {
+        id: 'ses_pending_2',
+        skillId: 'sk_3',
+        skillTitle: 'Conversational Spanish & Grammar Essentials',
+        teacherId: 'usr_priya',
+        teacherName: 'Priya Patel',
+        teacherAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+        learnerId: 'usr_aarav',
+        learnerName: 'Aarav Sharma',
+        learnerAvatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
+        status: 'pending',
+        scheduledDate: '2026-11-14',
+        scheduledTime: '10:00',
+        durationHours: 1,
+        locationType: 'online',
+        locationDetails: 'Google Meet link provided upon confirmation',
+        notes: 'Would love to practice travel dialogue and basic everyday questions.',
+        creditAmount: 1,
+        createdAt: '2026-11-08T09:15:00Z'
+      },
+      {
+        id: 'ses_completed_3',
+        skillId: 'sk_2',
+        skillTitle: 'Figma UI/UX Prototyping & Design Systems',
+        teacherId: 'usr_elena',
+        teacherName: 'Elena Rostova',
+        teacherAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+        learnerId: 'usr_aarav',
+        learnerName: 'Aarav Sharma',
+        learnerAvatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
+        status: 'completed',
+        scheduledDate: '2026-10-27',
+        scheduledTime: '14:00',
+        durationHours: 1,
+        locationType: 'in-person',
+        locationDetails: 'Design Studio B Lounge',
+        notes: 'Reviewed mobile wireframes and color contrast ratios.',
+        creditAmount: 1,
+        createdAt: '2026-10-25T11:00:00Z',
+        completedAt: '2026-10-27T15:05:00Z',
+        ratingGiven: 5,
+        reviewText: 'Elena is a phenomenal mentor! Clear, patient, and helped me grasp auto-layout instantly.'
+      }
+    ];
+
+    const CATEGORIES = [
+      'All Categories',
+      'Programming & Tech',
+      'Academic & Tutoring',
+      'Languages',
+      'Design & Arts',
+      'Music & Creative',
+      'Fitness & Wellness',
+      'Career & Professional'
+    ];
+
+    // --- MAIN REACT APPLICATION COMPONENT ---
+    function App() {
+      // LocalStorage State persistence
+      const [users, setUsers] = useState(() => {
+        const saved = localStorage.getItem('sb_users');
+        return saved ? JSON.parse(saved) : INITIAL_USERS;
+      });
+
+      const [currentUserId, setCurrentUserId] = useState(() => {
+        const saved = localStorage.getItem('sb_current_user');
+        return saved || 'usr_aarav';
+      });
+
+      const [skills, setSkills] = useState(() => {
+        const saved = localStorage.getItem('sb_skills');
+        return saved ? JSON.parse(saved) : INITIAL_SKILLS;
+      });
+
+      const [ledger, setLedger] = useState(() => {
+        const saved = localStorage.getItem('sb_ledger');
+        return saved ? JSON.parse(saved) : INITIAL_LEDGER;
+      });
+
+      const [sessions, setSessions] = useState(() => {
+        const saved = localStorage.getItem('sb_sessions');
+        return saved ? JSON.parse(saved) : INITIAL_SESSIONS;
+      });
+
+      // Navigation & view states: 'landing', 'marketplace', 'dashboard'
+      const [currentView, setCurrentView] = useState('marketplace');
+      const [dashboardTab, setDashboardTab] = useState('profile'); // 'profile', 'ledger', 'sessions', 'add-skill'
+
+      // Search & Filters for Marketplace
+      const [searchQuery, setSearchQuery] = useState('');
+      const [selectedCategory, setSelectedCategory] = useState('All Categories');
+      const [skillTypeFilter, setSkillTypeFilter] = useState('all'); // 'all', 'teaching', 'learning'
+      const [sortBy, setSortBy] = useState('newest'); // 'newest', 'rating'
+
+      // Modals
+      const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+      const [authMode, setAuthMode] = useState('login'); // 'login' or 'signup'
+      const [bookingModalSkill, setBookingModalSkill] = useState(null);
+      const [completionModalSession, setCompletionModalSession] = useState(null);
+      const [toast, setToast] = useState(null);
+
+      // Save state to LocalStorage
+      useEffect(() => {
+        localStorage.setItem('sb_users', JSON.stringify(users));
+      }, [users]);
+
+      useEffect(() => {
+        localStorage.setItem('sb_current_user', currentUserId);
+      }, [currentUserId]);
+
+      useEffect(() => {
+        localStorage.setItem('sb_skills', JSON.stringify(skills));
+      }, [skills]);
+
+      useEffect(() => {
+        localStorage.setItem('sb_ledger', JSON.stringify(ledger));
+      }, [ledger]);
+
+      useEffect(() => {
+        localStorage.setItem('sb_sessions', JSON.stringify(sessions));
+      }, [sessions]);
+
+      // Re-trigger Lucide icons on render
+      useEffect(() => {
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+      });
+
+      // Current active user object
+      const currentUser = useMemo(() => {
+        return users.find(u => u.id === currentUserId) || users[0];
+      }, [users, currentUserId]);
+
+      // Helper to show toasts
+      const showToast = (message, type = 'success') => {
+        setToast({ message, type, id: Date.now() });
+        setTimeout(() => {
+          setToast(null);
+        }, 4000);
+      };
+
+      // Switch active persona
+      const handleSwitchUser = (userId) => {
+        setCurrentUserId(userId);
+        const switched = users.find(u => u.id === userId);
+        showToast(`Switched active account to ${switched?.name} (${switched?.creditBalance} Credits)`, 'info');
+      };
+
+      // Reset application data to defaults
+      const handleResetData = () => {
+        if (window.confirm("Reset all platform data back to campus defaults?")) {
+          setUsers(INITIAL_USERS);
+          setCurrentUserId('usr_aarav');
+          setSkills(INITIAL_SKILLS);
+          setLedger(INITIAL_LEDGER);
+          setSessions(INITIAL_SESSIONS);
+          localStorage.clear();
+          showToast("Campus demo data successfully reset!", "info");
+        }
+      };
+
+      // Create a new Barter / Session Booking Proposal
+      const handleCreateBooking = (bookingData) => {
+        const { skill, date, time, locationType, locationDetails, notes } = bookingData;
+        
+        // Determine teacher and learner depending on skill type
+        let teacherId, teacherName, teacherAvatar, learnerId, learnerName, learnerAvatar;
+        
+        if (skill.type === 'teaching') {
+          // The skill owner is teaching; currentUser is learning
+          if (currentUser.creditBalance < 1) {
+            showToast("Insufficient credits! You need at least 1 credit to book a mentor. Teach a skill to earn credits first!", "error");
+            return;
+          }
+          teacherId = skill.userId;
+          teacherName = skill.userName;
+          teacherAvatar = skill.userAvatar;
+          learnerId = currentUser.id;
+          learnerName = currentUser.name;
+          learnerAvatar = currentUser.avatar;
+        } else {
+          // The skill owner was requesting a tutor (learning); currentUser is offering to teach
+          teacherId = currentUser.id;
+          teacherName = currentUser.name;
+          teacherAvatar = currentUser.avatar;
+          learnerId = skill.userId;
+          learnerName = skill.userName;
+          learnerAvatar = skill.userAvatar;
+        }
+
+        const newSession = {
+          id: 'ses_' + Math.random().toString(36).substr(2, 9),
+          skillId: skill.id,
+          skillTitle: skill.title,
+          teacherId,
+          teacherName,
+          teacherAvatar,
+          learnerId,
+          learnerName,
+          learnerAvatar,
+          status: 'pending',
+          scheduledDate: date,
+          scheduledTime: time,
+          durationHours: 1,
+          locationType,
+          locationDetails,
+          notes,
+          creditAmount: 1,
+          createdAt: new Date().toISOString()
+        };
+
+        setSessions([newSession, ...sessions]);
+        setBookingModalSkill(null);
+        showToast(`Barter proposal sent to ${skill.type === 'teaching' ? skill.userName : skill.userName}!`, 'success');
+        
+        // Switch view to dashboard sessions tab so user sees the new booking
+        setCurrentView('dashboard');
+        setDashboardTab('sessions');
+      };
+
+      // Accept a pending proposal (by the teacher or partner)
+      const handleAcceptSession = (sessionId) => {
+        setSessions(sessions.map(s => s.id === sessionId ? { ...s, status: 'confirmed' } : s));
+        showToast("Session confirmed! Scheduled on your calendar.", "success");
+      };
+
+      // Decline or Cancel a session
+      const handleDeclineSession = (sessionId) => {
+        setSessions(sessions.map(s => s.id === sessionId ? { ...s, status: 'declined' } : s));
+        showToast("Session proposal declined.", "info");
+      };
+
+      // COMPLETE SESSION & TRIGGER TIME-BANK CREDIT TRANSFER
+      const handleCompleteSession = (session, rating, reviewText) => {
+        const { teacherId, learnerId, teacherName, learnerName, skillTitle, id: sessionId } = session;
+
+        // Find users
+        const teacher = users.find(u => u.id === teacherId);
+        const learner = users.find(u => u.id === learnerId);
+
+        if (!teacher || !learner) {
+          showToast("Error locating session participants.", "error");
+          return;
+        }
+
+        // Verify learner has sufficient credit
+        if (learner.creditBalance < 1) {
+          showToast(`${learnerName} has 0 credits. Cannot settle time-banking transaction.`, "error");
+          return;
+        }
+
+        const timestamp = new Date().toISOString();
+
+        // 1. Update balances & stats
+        const updatedUsers = users.map(u => {
+          if (u.id === teacherId) {
+            const newTotalTaught = (u.sessionsTaught || 0) + 1;
+            const currentRatingsCount = u.reviewsCount || 0;
+            const newRating = Number((((u.rating || 5) * currentRatingsCount + rating) / (currentRatingsCount + 1)).toFixed(2));
+            return {
+              ...u,
+              creditBalance: u.creditBalance + 1,
+              sessionsTaught: newTotalTaught,
+              rating: newRating,
+              reviewsCount: currentRatingsCount + 1
+            };
+          }
+          if (u.id === learnerId) {
+            return {
+              ...u,
+              creditBalance: u.creditBalance - 1,
+              sessionsLearned: (u.sessionsLearned || 0) + 1
+            };
+          }
+          return u;
+        });
+
+        // 2. Create Ledger Entries for BOTH participants (Time-Banking Ledger)
+        const teacherLedgerEntry = {
+          id: 'tx_' + Math.random().toString(36).substr(2, 9),
+          userId: teacherId,
+          type: 'credit_earned',
+          amount: 1,
+          description: `Taught "${skillTitle}" to ${learnerName}`,
+          partnerName: learnerName,
+          sessionId: sessionId,
+          timestamp: timestamp,
+          balanceAfter: teacher.creditBalance + 1,
+          status: 'settled'
+        };
+
+        const learnerLedgerEntry = {
+          id: 'tx_' + Math.random().toString(36).substr(2, 9),
+          userId: learnerId,
+          type: 'credit_spent',
+          amount: -1,
+          description: `Learned "${skillTitle}" from ${teacherName}`,
+          partnerName: teacherName,
+          sessionId: sessionId,
+          timestamp: timestamp,
+          balanceAfter: learner.creditBalance - 1,
+          status: 'settled'
+        };
+
+        // 3. Mark session as completed
+        const updatedSessions = sessions.map(s => {
+          if (s.id === sessionId) {
+            return {
+              ...s,
+              status: 'completed',
+              completedAt: timestamp,
+              ratingGiven: rating,
+              reviewText: reviewText
+            };
+          }
+          return s;
+        });
+
+        // Apply state updates
+        setUsers(updatedUsers);
+        setLedger([teacherLedgerEntry, learnerLedgerEntry, ...ledger]);
+        setSessions(updatedSessions);
+        setCompletionModalSession(null);
+
+        showToast(`🎉 Session completed! +1 Credit transferred to ${teacherName}, -1 Credit deducted from ${learnerName}.`, 'success');
+      };
+
+      // Add a new skill listing
+      const handleAddSkill = (newSkillData) => {
+        const skill = {
+          id: 'sk_' + Math.random().toString(36).substr(2, 9),
+          userId: currentUser.id,
+          userName: currentUser.name,
+          userAvatar: currentUser.avatar,
+          userMajor: currentUser.major,
+          userRating: currentUser.rating,
+          createdAt: new Date().toISOString(),
+          creditsCost: 1,
+          ...newSkillData
+        };
+
+        setSkills([skill, ...skills]);
+        showToast("Skill listing published to campus marketplace!", "success");
+        setCurrentView('marketplace');
+      };
+
+      // Delete a skill listing owned by currentUser
+      const handleDeleteSkill = (skillId) => {
+        setSkills(skills.filter(s => s.id !== skillId));
+        showToast("Skill listing removed.", "info");
+      };
+
+      // Handle custom sign-up
+      const handleSignUp = (formData) => {
+        const newUserId = 'usr_' + Math.random().toString(36).substr(2, 8);
+        const newUser = {
+          id: newUserId,
+          name: formData.name,
+          email: formData.email,
+          major: formData.major,
+          gradYear: formData.gradYear,
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(formData.name)}`,
+          bio: formData.bio || `Student studying ${formData.major}, Class of ${formData.gradYear}. Excited to exchange skills on campus!`,
+          creditBalance: 3, // Initial 3 welcome credits!
+          rating: 5.0,
+          reviewsCount: 0,
+          sessionsTaught: 0,
+          sessionsLearned: 0,
+          badges: ['New Scholar', 'Campus Verified']
+        };
+
+        // Welcome bonus ledger entry
+        const welcomeLedger = {
+          id: 'tx_' + Math.random().toString(36).substr(2, 9),
+          userId: newUserId,
+          type: 'credit_bonus',
+          amount: 3,
+          description: 'Welcome Time-Bank Grant for Campus Verification',
+          partnerName: 'SkillBarter Campus Network',
+          sessionId: 'SYS-WELCOME',
+          timestamp: new Date().toISOString(),
+          balanceAfter: 3,
+          status: 'settled'
+        };
+
+        setUsers([...users, newUser]);
+        setLedger([welcomeLedger, ...ledger]);
+        setCurrentUserId(newUserId);
+        setIsAuthModalOpen(false);
+        showToast(`Welcome to SkillBarter, ${newUser.name}! You've been credited 3 free starting hours!`, "success");
+      };
+
+      // Handle custom login
+      const handleLogin = (email) => {
+        const existing = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+        if (existing) {
+          setCurrentUserId(existing.id);
+          setIsAuthModalOpen(false);
+          showToast(`Welcome back, ${existing.name}!`, "success");
+        } else {
+          showToast("Campus email not found. Try one of the demo accounts or sign up!", "error");
+        }
+      };
+
+      // Filtered skills for Marketplace
+      const filteredSkills = useMemo(() => {
+        return skills.filter(skill => {
+          const matchesQuery = 
+            skill.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            skill.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            skill.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            skill.category.toLowerCase().includes(searchQuery.toLowerCase());
+
+          const matchesCategory = selectedCategory === 'All Categories' || skill.category === selectedCategory;
+          const matchesType = skillTypeFilter === 'all' || skill.type === skillTypeFilter;
+
+          return matchesQuery && matchesCategory && matchesType;
+        }).sort((a, b) => {
+          if (sortBy === 'rating') return (b.userRating || 0) - (a.userRating || 0);
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+      }, [skills, searchQuery, selectedCategory, skillTypeFilter, sortBy]);
+
+      return (
+        <div className="flex flex-col min-h-screen bg-slate-50 text-slate-800">
+          
+          {/* TOAST NOTIFICATION CONTAINER */}
+          {toast && (
+            <div className="fixed bottom-6 right-6 z-50 max-w-md w-full animate-bounce-in">
+              <div className={`p-4 rounded-xl shadow-2xl flex items-center gap-3 border text-sm font-medium ${
+                toast.type === 'error' ? 'bg-red-50 text-red-800 border-red-200' :
+                toast.type === 'info' ? 'bg-blue-50 text-blue-800 border-blue-200' :
+                'bg-emerald-50 text-emerald-900 border-emerald-200'
+              }`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                  toast.type === 'error' ? 'bg-red-200 text-red-700' :
+                  toast.type === 'info' ? 'bg-blue-200 text-blue-700' :
+                  'bg-emerald-200 text-accent-700'
+                }`}>
+                  <i data-lucide={toast.type === 'error' ? 'alert-circle' : toast.type === 'info' ? 'info' : 'check-circle-2'} className="w-5 h-5"></i>
+                </div>
+                <div className="flex-1">{toast.message}</div>
+                <button onClick={() => setToast(null)} className="text-slate-400 hover:text-slate-700">
+                  <i data-lucide="x" className="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* TOP DEMO TESTER BAR / ACCOUNT SWITCHER */}
+          <div className="bg-slate-900 text-slate-200 text-xs py-2 px-4 border-b border-slate-800">
+            <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 font-semibold text-[11px] border border-brand-500/30">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                  Campus Time-Bank Simulator
+                </span>
+                <span className="hidden sm:inline text-slate-400">Switch students to simulate barter transactions:</span>
+              </div>
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+                {users.map(u => (
+                  <button
+                    key={u.id}
+                    onClick={() => handleSwitchUser(u.id)}
+                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition flex items-center gap-1.5 shrink-0 ${
+                      u.id === currentUserId 
+                        ? 'bg-brand-600 text-white shadow-sm ring-2 ring-brand-400' 
+                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    }`}
+                  >
+                    <img src={u.avatar} className="w-4 h-4 rounded-full object-cover" />
+                    <span>{u.name.split(' ')[0]}</span>
+                    <span className="px-1.5 py-0.2 rounded bg-black/40 text-[10px] text-amber-300 font-mono font-bold">
+                      {u.creditBalance} cr
+                    </span>
+                  </button>
+                ))}
+                <button
+                  onClick={handleResetData}
+                  title="Reset campus seed data"
+                  className="px-2 py-1 rounded text-slate-400 hover:text-red-300 hover:bg-slate-800 transition"
+                >
+                  <i data-lucide="rotate-ccw" className="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* MAIN NAVBAR */}
+          <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+              
+              {/* Logo & Campus Tag */}
+              <div 
+                className="flex items-center gap-3 cursor-pointer group"
+                onClick={() => setCurrentView('landing')}
+              >
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform">
+                  <i data-lucide="repeat" className="w-5 h-5"></i>
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-heading font-extrabold text-xl tracking-tight text-slate-900 group-hover:text-brand-600 transition">
+                      Skill<span className="text-brand-600">Barter</span>
+                    </span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-brand-50 text-brand-700 border border-brand-200">
+                      Campus
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 hidden sm:block">1 Hour Taught = 1 Time Credit</p>
+                </div>
+              </div>
+
+              {/* Navigation Links */}
+              <nav className="flex items-center gap-1 sm:gap-2">
+                <button
+                  onClick={() => setCurrentView('landing')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1.5 ${
+                    currentView === 'landing' ? 'bg-slate-100 text-brand-600 font-semibold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  <i data-lucide="home" className="w-4 h-4"></i>
+                  <span className="hidden md:inline">How It Works</span>
+                </button>
+
+                <button
+                  onClick={() => setCurrentView('marketplace')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1.5 ${
+                    currentView === 'marketplace' ? 'bg-brand-50 text-brand-700 font-semibold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  <i data-lucide="compass" className="w-4 h-4"></i>
+                  <span>Marketplace</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setCurrentView('dashboard');
+                    setDashboardTab('profile');
+                  }}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1.5 ${
+                    currentView === 'dashboard' ? 'bg-brand-50 text-brand-700 font-semibold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  <i data-lucide="layout-dashboard" className="w-4 h-4"></i>
+                  <span>Dashboard</span>
+                </button>
+              </nav>
+
+              {/* Right Side: Credit Pill & Current User Profile */}
+              <div className="flex items-center gap-3">
+                {/* Credit Ledger Quick Pill */}
+                <button
+                  onClick={() => {
+                    setCurrentView('dashboard');
+                    setDashboardTab('ledger');
+                  }}
+                  title="View your Time-Bank Credit Ledger"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-300 text-amber-900 hover:bg-amber-100 transition shadow-xs group"
+                >
+                  <div className="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-xs shadow-xs group-hover:rotate-12 transition">
+                    ⚡
+                  </div>
+                  <div className="text-left">
+                    <span className="text-xs font-bold font-mono text-amber-950">
+                      {currentUser.creditBalance}
+                    </span>
+                    <span className="text-[11px] text-amber-800 ml-1 hidden sm:inline font-medium">Credits</span>
+                  </div>
+                </button>
+
+                {/* User Dropdown / Switcher Avatar */}
+                <div 
+                  className="flex items-center gap-2 pl-2 border-l border-slate-200 cursor-pointer"
+                  onClick={() => {
+                    setCurrentView('dashboard');
+                    setDashboardTab('profile');
+                  }}
+                >
+                  <img
+                    src={currentUser.avatar}
+                    alt={currentUser.name}
+                    className="w-9 h-9 rounded-full object-cover ring-2 ring-brand-500/40"
+                  />
+                  <div className="hidden lg:block text-left">
+                    <div className="text-xs font-semibold text-slate-900 leading-tight flex items-center gap-1">
+                      {currentUser.name}
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 truncate max-w-[120px]">
+                      {currentUser.major}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sign In / Sign Out or Switch modal trigger */}
+                <button
+                  onClick={() => {
+                    setAuthMode('login');
+                    setIsAuthModalOpen(true);
+                  }}
+                  className="p-2 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100"
+                  title="Sign In / Register Campus Account"
+                >
+                  <i data-lucide="user-plus" className="w-4 h-4"></i>
+                </button>
+              </div>
+
+            </div>
+          </header>
+
+          {/* VIEW 1: LANDING & HOW IT WORKS PAGE */}
+          {currentView === 'landing' && (
+            <main className="flex-1">
+              
+              {/* Hero Section */}
+              <section className="relative overflow-hidden bg-gradient-to-b from-brand-50/60 via-white to-slate-50 py-16 sm:py-24 border-b border-slate-200">
+                <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-40"></div>
+                
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                  
+                  {/* Badge */}
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-100/80 text-brand-800 text-xs font-semibold border border-brand-200 shadow-xs mb-6">
+                    <span className="w-2 h-2 rounded-full bg-brand-600"></span>
+                    Campus Time-Banking Peer Exchange
+                  </div>
+
+                  {/* Main Headline */}
+                  <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight max-w-4xl mx-auto leading-[1.15]">
+                    Exchange Skills on Campus <br className="hidden sm:inline" />
+                    <span className="bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                      Without Spending a Dime.
+                    </span>
+                  </h1>
+
+                  {/* Subtitle */}
+                  <p className="mt-6 text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+                    Teach what you're great at to earn <strong>+1 Time Credit</strong> per hour. Spend your credits to learn anything from fellow students. Verified campus emails only.
+                  </p>
+
+                  {/* CTA Buttons */}
+                  <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+                    <button
+                      onClick={() => setCurrentView('marketplace')}
+                      className="px-6 py-3.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold shadow-lg shadow-brand-500/25 flex items-center gap-2 hover:-translate-y-0.5 transition active:translate-y-0"
+                    >
+                      <i data-lucide="compass" className="w-5 h-5"></i>
+                      <span>Explore Skills Marketplace</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setAuthMode('signup');
+                        setIsAuthModalOpen(true);
+                      }}
+                      className="px-6 py-3.5 rounded-xl bg-white hover:bg-slate-100 text-slate-800 font-semibold border border-slate-300 shadow-xs flex items-center gap-2 transition"
+                    >
+                      <i data-lucide="sparkles" className="w-5 h-5 text-amber-500"></i>
+                      <span>Join with Campus Email (+3 Free Credits)</span>
+                    </button>
+                  </div>
+
+                  {/* Live Time-Banking Formula Graphic */}
+                  <div className="mt-14 max-w-3xl mx-auto bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-xl">
+                    <div className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">
+                      How The Campus Time-Bank Ledger Operates
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                      
+                      {/* Step 1: Teach */}
+                      <div className="bg-emerald-50/80 rounded-xl p-5 border border-emerald-200 text-left">
+                        <div className="w-10 h-10 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-lg mb-3 shadow-xs">
+                          +1
+                        </div>
+                        <h4 className="font-bold text-slate-900 text-base">Teach 1 Hour</h4>
+                        <p className="text-xs text-slate-600 mt-1">
+                          Tutor Python, guide Spanish dialogues, or teach guitar chords to another student.
+                        </p>
+                        <div className="mt-3 inline-block px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[11px] font-semibold">
+                          Earn +1 Credit
+                        </div>
+                      </div>
+
+                      {/* Equilibrium Icon */}
+                      <div className="flex flex-col items-center justify-center text-slate-400">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 text-slate-600 font-bold">
+                          ⇄
+                        </div>
+                        <span className="text-[11px] font-mono text-slate-500 mt-1">Equal 1:1 Value</span>
+                      </div>
+
+                      {/* Step 2: Learn */}
+                      <div className="bg-indigo-50/80 rounded-xl p-5 border border-indigo-200 text-left">
+                        <div className="w-10 h-10 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-lg mb-3 shadow-xs">
+                          -1
+                        </div>
+                        <h4 className="font-bold text-slate-900 text-base">Learn 1 Hour</h4>
+                        <p className="text-xs text-slate-600 mt-1">
+                          Book a 1-on-1 session with a peer for Organic Chem prep, Figma UI design, or Excel modeling.
+                        </p>
+                        <div className="mt-3 inline-block px-2 py-0.5 bg-brand-100 text-brand-800 rounded text-[11px] font-semibold">
+                          Spend 1 Credit
+                        </div>
+                      </div>
+
+                    </div>
+
+                    <div className="mt-6 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between text-xs text-slate-500 gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <i data-lucide="shield-check" className="w-4 h-4 text-emerald-600"></i>
+                        <span>Zero cash involved — time is the campus currency.</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 font-medium text-brand-600">
+                        <span>Protected by transparent ledger escrow</span>
+                        <i data-lucide="arrow-right" className="w-3.5 h-3.5"></i>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </section>
+
+              {/* Three Simple Pillars Section */}
+              <section className="py-16 bg-white border-b border-slate-200">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <div className="text-center max-w-2xl mx-auto mb-12">
+                    <h2 className="text-3xl font-extrabold text-slate-900">Built Specifically For Campus Life</h2>
+                    <p className="text-slate-600 mt-2">No awkward fee negotiations or subscription paywalls. Simple, fair, and collaborative.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    
+                    {/* Pillar 1 */}
+                    <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 hover:shadow-md transition">
+                      <div className="w-12 h-12 rounded-xl bg-brand-500/10 text-brand-600 flex items-center justify-center mb-4">
+                        <i data-lucide="award" className="w-6 h-6"></i>
+                      </div>
+                      <h3 className="text-lg font-bold text-slate-900 mb-2">Everyone Has Something To Teach</h3>
+                      <p className="text-sm text-slate-600 leading-relaxed">
+                        Whether you're an A-grade student in Calculus, a self-taught video editor, bilingual in Japanese, or an avid gym trainer, your knowledge is high-value to your campus peers.
+                      </p>
+                    </div>
+
+                    {/* Pillar 2 */}
+                    <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 hover:shadow-md transition">
+                      <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-accent-600 flex items-center justify-center mb-4">
+                        <i data-lucide="scale" className="w-6 h-6"></i>
+                      </div>
+                      <h3 className="text-lg font-bold text-slate-900 mb-2">Automated Time-Banking Ledger</h3>
+                      <p className="text-sm text-slate-600 leading-relaxed">
+                        Credits are only settled when both students confirm the session took place. Complete audit trail with timestamps, preventing no-shows and ensuring accountability.
+                      </p>
+                    </div>
+
+                    {/* Pillar 3 */}
+                    <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 hover:shadow-md transition">
+                      <div className="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center mb-4">
+                        <i data-lucide="map-pin" className="w-6 h-6"></i>
+                      </div>
+                      <h3 className="text-lg font-bold text-slate-900 mb-2">Safe Campus Locations</h3>
+                      <p className="text-sm text-slate-600 leading-relaxed">
+                        Meet where you already spend your days: the campus library study rooms, science center lounges, university dining hall, or virtually via Google Meet.
+                      </p>
+                    </div>
+
+                  </div>
+                </div>
+              </section>
+
+              {/* Ready to start banner */}
+              <section className="py-14 bg-gradient-to-r from-brand-900 via-indigo-900 to-slate-900 text-white text-center">
+                <div className="max-w-4xl mx-auto px-4">
+                  <h2 className="text-3xl font-bold tracking-tight">Ready to barter your first skill?</h2>
+                  <p className="text-slate-300 mt-2 max-w-xl mx-auto">
+                    Sign up with your campus email address today and receive 3 bonus credits immediately.
+                  </p>
+                  <div className="mt-6 flex justify-center gap-3">
+                    <button
+                      onClick={() => setCurrentView('marketplace')}
+                      className="px-6 py-3 rounded-xl bg-brand-500 hover:bg-brand-400 text-white font-semibold shadow-md transition"
+                    >
+                      Browse Marketplace
+                    </button>
+                    <button
+                      onClick={() => {
+                        setCurrentView('dashboard');
+                        setDashboardTab('add-skill');
+                      }}
+                      className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold backdrop-blur-xs border border-white/20 transition"
+                    >
+                      Offer a Skill Now
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+            </main>
+          )}
+
+          {/* VIEW 2: EXPLORE / SKILLS MARKETPLACE */}
+          {currentView === 'marketplace' && (
+            <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+              
+              {/* Header Title & Quick Action */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">Campus Skills Marketplace</h1>
+                  <p className="text-slate-500 text-sm mt-1">
+                    Discover skills offered by fellow students or find requests you can teach to earn time credits.
+                  </p>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      setCurrentView('dashboard');
+                      setDashboardTab('add-skill');
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold shadow-sm flex items-center gap-2 transition"
+                  >
+                    <i data-lucide="plus-circle" className="w-4 h-4"></i>
+                    <span>List a Skill (Teach or Learn)</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* SEARCH & FILTERS BAR */}
+              <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs mb-8 space-y-4">
+                
+                {/* Search Bar + Type Toggle + Sorter */}
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                  
+                  {/* Search Input */}
+                  <div className="relative md:col-span-6">
+                    <i data-lucide="search" className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input
+                      type="text"
+                      placeholder="Search skills, topics (e.g. Python, Spanish, Guitar), or tutor names..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:bg-white transition"
+                    />
+                    {searchQuery && (
+                      <button 
+                        onClick={() => setSearchQuery('')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      >
+                        <i data-lucide="x" className="w-4 h-4"></i>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Filter by Type: All, Teaching, Seeking */}
+                  <div className="md:col-span-4 flex rounded-xl bg-slate-100 p-1 border border-slate-200 text-xs font-semibold">
+                    <button
+                      onClick={() => setSkillTypeFilter('all')}
+                      className={`flex-1 py-1.5 rounded-lg transition ${
+                        skillTypeFilter === 'all' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      All Listings ({skills.length})
+                    </button>
+                    <button
+                      onClick={() => setSkillTypeFilter('teaching')}
+                      className={`flex-1 py-1.5 rounded-lg transition ${
+                        skillTypeFilter === 'teaching' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      🎓 Available to Teach
+                    </button>
+                    <button
+                      onClick={() => setSkillTypeFilter('learning')}
+                      className={`flex-1 py-1.5 rounded-lg transition ${
+                        skillTypeFilter === 'learning' ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      🙋 Seeking Tutors
+                    </button>
+                  </div>
+
+                  {/* Sorter */}
+                  <div className="md:col-span-2">
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="w-full py-2.5 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-hidden focus:ring-2 focus:ring-brand-500"
+                    >
+                      <option value="newest">Sort: Recently Added</option>
+                      <option value="rating">Sort: Highest Student Rating</option>
+                    </select>
+                  </div>
+
+                </div>
+
+                {/* Category Pills Slider */}
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar text-xs">
+                  {CATEGORIES.map(category => (
+                    <button
+                      key={category}
+                      onClick={() => setSelectedCategory(category)}
+                      className={`px-3 py-1.5 rounded-full whitespace-nowrap font-medium transition ${
+                        selectedCategory === category
+                          ? 'bg-slate-900 text-white shadow-xs'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
+
+              </div>
+
+              {/* SKILLS GRID */}
+              {filteredSkills.length === 0 ? (
+                <div className="text-center py-16 bg-white rounded-2xl border border-slate-200 p-8">
+                  <div className="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="search-x" className="w-8 h-8"></i>
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-800">No matching skills found</h3>
+                  <p className="text-slate-500 text-sm max-w-md mx-auto mt-1">
+                    Try searching for different keywords or clear your category filters.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSelectedCategory('All Categories');
+                      setSkillTypeFilter('all');
+                    }}
+                    className="mt-4 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition"
+                  >
+                    Clear All Filters
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredSkills.map(skill => {
+                    const isOwnSkill = skill.userId === currentUser.id;
+                    const isTeaching = skill.type === 'teaching';
+
+                    return (
+                      <div
+                        key={skill.id}
+                        className="bg-white rounded-2xl border border-slate-200 hover:border-slate-300 shadow-xs hover:shadow-md transition-all flex flex-col justify-between overflow-hidden group"
+                      >
+                        {/* Top Card Portion */}
+                        <div className="p-5">
+                          
+                          {/* Top Badges: Category & Type */}
+                          <div className="flex items-center justify-between gap-2 mb-3">
+                            <span className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200/60">
+                              {skill.category}
+                            </span>
+                            <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold flex items-center gap-1 ${
+                              isTeaching 
+                                ? 'bg-emerald-50 text-accent-700 border border-emerald-200' 
+                                : 'bg-purple-50 text-purple-700 border border-purple-200'
+                            }`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${isTeaching ? 'bg-emerald-500' : 'bg-purple-500'}`}></span>
+                              {isTeaching ? 'Offering to Teach' : 'Seeking Tutor'}
+                            </span>
+                          </div>
+
+                          {/* Title */}
+                          <h3 className="text-base font-bold text-slate-900 group-hover:text-brand-600 transition line-clamp-2 leading-snug">
+                            {skill.title}
+                          </h3>
+
+                          {/* Description */}
+                          <p className="text-xs text-slate-600 mt-2 line-clamp-3 leading-relaxed">
+                            {skill.description}
+                          </p>
+
+                          {/* Skill Metadata: Level, Location */}
+                          <div className="mt-4 space-y-1.5 text-xs text-slate-500">
+                            <div className="flex items-center gap-2">
+                              <i data-lucide="bar-chart-2" className="w-3.5 h-3.5 text-slate-400"></i>
+                              <span>Level: <strong>{skill.level}</strong></span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <i data-lucide="map-pin" className="w-3.5 h-3.5 text-slate-400"></i>
+                              <span className="truncate">{skill.location}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <i data-lucide="clock" className="w-3.5 h-3.5 text-slate-400"></i>
+                              <span className="truncate">{skill.availability}</span>
+                            </div>
+                          </div>
+
+                        </div>
+
+                        {/* Bottom Card Portion: Student Info & Action Button */}
+                        <div className="p-4 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between gap-3">
+                          
+                          {/* Student identity */}
+                          <div className="flex items-center gap-2.5">
+                            <img
+                              src={skill.userAvatar}
+                              alt={skill.userName}
+                              className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-300"
+                            />
+                            <div>
+                              <div className="text-xs font-semibold text-slate-800 leading-tight">
+                                {skill.userName}
+                              </div>
+                              <div className="flex items-center gap-1 text-[11px] text-slate-500">
+                                <span>★ {skill.userRating || '5.0'}</span>
+                                <span>•</span>
+                                <span className="truncate max-w-[100px]">{skill.userMajor}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Action Button */}
+                          <div>
+                            {isOwnSkill ? (
+                              <button
+                                onClick={() => handleDeleteSkill(skill.id)}
+                                className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold rounded-lg border border-rose-200 transition"
+                              >
+                                Delete
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => setBookingModalSkill(skill)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs flex items-center gap-1.5 transition ${
+                                  isTeaching
+                                    ? 'bg-brand-600 hover:bg-brand-700 text-white'
+                                    : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                }`}
+                              >
+                                <span>{isTeaching ? 'Book Session (-1 cr)' : 'Offer to Teach (+1 cr)'}</span>
+                                <i data-lucide="arrow-right" className="w-3 h-3"></i>
+                              </button>
+                            )}
+                          </div>
+
+                        </div>
+
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+            </main>
+          )}
+
+          {/* VIEW 3: USER DASHBOARD WITH 4 COMPREHENSIVE TABS */}
+          {currentView === 'dashboard' && (
+            <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+              
+              {/* Dashboard Header Profile Banner */}
+              <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-brand-950 rounded-3xl p-6 sm:p-8 text-white shadow-xl mb-8 relative overflow-hidden">
+                <div className="absolute right-0 top-0 -mt-12 -mr-12 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+                  
+                  {/* User Profile Overview */}
+                  <div className="flex items-center gap-4">
+                    <img
+                      src={currentUser.avatar}
+                      alt={currentUser.name}
+                      className="w-20 h-20 rounded-2xl object-cover ring-4 ring-white/20 shadow-md"
+                    />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h1 className="text-2xl font-bold tracking-tight">{currentUser.name}</h1>
+                        <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[11px] font-semibold border border-emerald-500/30 flex items-center gap-1">
+                          <i data-lucide="check" className="w-3 h-3"></i> Verified Student
+                        </span>
+                      </div>
+                      <p className="text-slate-300 text-xs mt-1">
+                        {currentUser.major} • Class of {currentUser.gradYear} • {currentUser.email}
+                      </p>
+                      
+                      {/* Badges */}
+                      <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                        {(currentUser.badges || []).map((badge, idx) => (
+                          <span key={idx} className="px-2 py-0.5 rounded bg-white/10 text-slate-200 text-[10px] font-medium backdrop-blur-xs">
+                            {badge}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* High Impact Time-Banking Credit Card */}
+                  <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-white/15 flex items-center gap-6 self-start md:self-auto">
+                    <div>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-amber-300 block">
+                        Time-Bank Ledger
+                      </span>
+                      <div className="flex items-baseline gap-1 mt-0.5">
+                        <span className="text-3xl font-extrabold font-mono text-white">
+                          {currentUser.creditBalance}
+                        </span>
+                        <span className="text-xs text-slate-300 font-medium">Credits</span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 block mt-0.5">
+                        = {currentUser.creditBalance} Hours of peer tutoring available
+                      </span>
+                    </div>
+
+                    <div className="border-l border-white/15 pl-4 space-y-1 text-xs">
+                      <div className="text-emerald-300 flex items-center gap-1 font-medium">
+                        <i data-lucide="arrow-up-right" className="w-3.5 h-3.5"></i>
+                        <span>{currentUser.sessionsTaught || 0} hrs taught (+{currentUser.sessionsTaught || 0})</span>
+                      </div>
+                      <div className="text-indigo-300 flex items-center gap-1 font-medium">
+                        <i data-lucide="arrow-down-left" className="w-3.5 h-3.5"></i>
+                        <span>{currentUser.sessionsLearned || 0} hrs learned (-{currentUser.sessionsLearned || 0})</span>
+                      </div>
+                      <div className="text-amber-300 flex items-center gap-1 text-[11px]">
+                        <span>★ {currentUser.rating} ({currentUser.reviewsCount} reviews)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              {/* DASHBOARD TABS NAVIGATION */}
+              <div className="flex items-center gap-2 border-b border-slate-200 mb-6 overflow-x-auto pb-1">
+                <button
+                  onClick={() => setDashboardTab('profile')}
+                  className={`px-4 py-3 text-sm font-semibold border-b-2 flex items-center gap-2 transition whitespace-nowrap ${
+                    dashboardTab === 'profile'
+                      ? 'border-brand-600 text-brand-600'
+                      : 'border-transparent text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <i data-lucide="user" className="w-4 h-4"></i>
+                  <span>Profile & Wishlist</span>
+                </button>
+
+                <button
+                  onClick={() => setDashboardTab('ledger')}
+                  className={`px-4 py-3 text-sm font-semibold border-b-2 flex items-center gap-2 transition whitespace-nowrap ${
+                    dashboardTab === 'ledger'
+                      ? 'border-brand-600 text-brand-600'
+                      : 'border-transparent text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <i data-lucide="receipt" className="w-4 h-4"></i>
+                  <span>Credit Ledger / History</span>
+                  <span className="px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800 text-[10px] font-mono font-bold">
+                    {ledger.filter(l => l.userId === currentUser.id).length}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => setDashboardTab('sessions')}
+                  className={`px-4 py-3 text-sm font-semibold border-b-2 flex items-center gap-2 transition whitespace-nowrap ${
+                    dashboardTab === 'sessions'
+                      ? 'border-brand-600 text-brand-600'
+                      : 'border-transparent text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <i data-lucide="calendar" className="w-4 h-4"></i>
+                  <span>My Bookings & Sessions</span>
+                  {sessions.filter(s => (s.teacherId === currentUser.id || s.learnerId === currentUser.id) && s.status === 'pending').length > 0 && (
+                    <span className="w-2 h-2 rounded-full bg-brand-600"></span>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setDashboardTab('add-skill')}
+                  className={`px-4 py-3 text-sm font-semibold border-b-2 flex items-center gap-2 transition whitespace-nowrap ${
+                    dashboardTab === 'add-skill'
+                      ? 'border-brand-600 text-brand-600'
+                      : 'border-transparent text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <i data-lucide="plus-circle" className="w-4 h-4"></i>
+                  <span>Add / Manage Skills</span>
+                </button>
+              </div>
+
+              {/* TAB 1: PROFILE & WISHLIST */}
+              {dashboardTab === 'profile' && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  
+                  {/* Left Column: Student Bio & Verification */}
+                  <div className="space-y-6">
+                    <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
+                      <h3 className="text-base font-bold text-slate-900 mb-3">About Me</h3>
+                      <p className="text-sm text-slate-600 leading-relaxed">
+                        {currentUser.bio}
+                      </p>
+                      
+                      <div className="mt-5 pt-4 border-t border-slate-100 space-y-2.5 text-xs text-slate-600">
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Campus Email:</span>
+                          <span className="font-medium text-slate-800">{currentUser.email}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Major:</span>
+                          <span className="font-medium text-slate-800">{currentUser.major}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Class Year:</span>
+                          <span className="font-medium text-slate-800">{currentUser.gradYear}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Member Since:</span>
+                          <span className="font-medium text-slate-800">Fall 2026</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Time-Banking Health & Rules */}
+                    <div className="bg-brand-50/50 rounded-2xl p-5 border border-brand-100 text-xs text-brand-900">
+                      <div className="flex items-center gap-2 font-bold mb-2">
+                        <i data-lucide="info" className="w-4 h-4 text-brand-600"></i>
+                        <span>Time-Banking Rules</span>
+                      </div>
+                      <p className="leading-relaxed text-brand-800">
+                        Every skill is valued equally at <strong>1 hour = 1 credit</strong>. Credit escrow ensures neither party loses time or credits without verified completion.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Middle/Right Column: Skills Offered & Skills Wanted */}
+                  <div className="lg:col-span-2 space-y-6">
+                    
+                    {/* Skills I Offer */}
+                    <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h3 className="text-base font-bold text-slate-900">Skills I Can Teach (+1 Credit)</h3>
+                          <p className="text-xs text-slate-500">Other students can book these to learn from you.</p>
+                        </div>
+                        <button
+                          onClick={() => setDashboardTab('add-skill')}
+                          className="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1"
+                        >
+                          <i data-lucide="plus" className="w-3.5 h-3.5"></i> Add New
+                        </button>
+                      </div>
+
+                      <div className="space-y-3">
+                        {skills.filter(s => s.userId === currentUser.id && s.type === 'teaching').length === 0 ? (
+                          <div className="text-center py-6 border border-dashed border-slate-200 rounded-xl text-xs text-slate-500">
+                            You haven't listed any teaching skills yet. List a skill to start earning credits!
+                          </div>
+                        ) : (
+                          skills.filter(s => s.userId === currentUser.id && s.type === 'teaching').map(skill => (
+                            <div key={skill.id} className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-4">
+                              <div>
+                                <h4 className="text-sm font-bold text-slate-900">{skill.title}</h4>
+                                <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                                  <span>{skill.category}</span>
+                                  <span>•</span>
+                                  <span>{skill.level}</span>
+                                  <span>•</span>
+                                  <span>{skill.location}</span>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => handleDeleteSkill(skill.id)}
+                                className="text-xs text-rose-600 hover:text-rose-800 px-2 py-1 rounded hover:bg-rose-50"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Skills I Want to Learn */}
+                    <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h3 className="text-base font-bold text-slate-900">Skills I Want to Learn (-1 Credit)</h3>
+                          <p className="text-xs text-slate-500">Campus tutors can see these and offer to teach you.</p>
+                        </div>
+                        <button
+                          onClick={() => setDashboardTab('add-skill')}
+                          className="text-xs font-semibold text-purple-600 hover:text-purple-700 flex items-center gap-1"
+                        >
+                          <i data-lucide="plus" className="w-3.5 h-3.5"></i> Post Request
+                        </button>
+                      </div>
+
+                      <div className="space-y-3">
+                        {skills.filter(s => s.userId === currentUser.id && s.type === 'learning').length === 0 ? (
+                          <div className="text-center py-6 border border-dashed border-slate-200 rounded-xl text-xs text-slate-500">
+                            You have no active learning requests.
+                          </div>
+                        ) : (
+                          skills.filter(s => s.userId === currentUser.id && s.type === 'learning').map(skill => (
+                            <div key={skill.id} className="p-4 rounded-xl bg-purple-50/50 border border-purple-200/80 flex items-center justify-between gap-4">
+                              <div>
+                                <h4 className="text-sm font-bold text-slate-900">{skill.title}</h4>
+                                <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                                  <span>{skill.category}</span>
+                                  <span>•</span>
+                                  <span>{skill.level}</span>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => handleDeleteSkill(skill.id)}
+                                className="text-xs text-rose-600 hover:text-rose-800 px-2 py-1 rounded hover:bg-rose-50"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+
+                  </div>
+
+                </div>
+              )}
+
+              {/* TAB 2: CREDIT LEDGER / TRANSACTION HISTORY */}
+              {dashboardTab === 'ledger' && (
+                <div className="space-y-6">
+                  
+                  {/* Ledger Summary Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    
+                    <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs">
+                      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Current Bank Balance</span>
+                      <div className="text-2xl font-extrabold font-mono text-slate-900 mt-1">
+                        {currentUser.creditBalance} Credits
+                      </div>
+                      <span className="text-xs text-slate-500 mt-1 block">Ready to spend on learning</span>
+                    </div>
+
+                    <div className="bg-emerald-50 rounded-2xl p-5 border border-emerald-200 text-emerald-950 shadow-xs">
+                      <span className="text-xs font-semibold text-emerald-700 uppercase tracking-wider">Lifetime Hours Taught</span>
+                      <div className="text-2xl font-extrabold font-mono text-emerald-800 mt-1">
+                        +{currentUser.sessionsTaught || 0} Credits
+                      </div>
+                      <span className="text-xs text-emerald-700 mt-1 block">Peer tutoring completed</span>
+                    </div>
+
+                    <div className="bg-indigo-50 rounded-2xl p-5 border border-indigo-200 text-indigo-950 shadow-xs">
+                      <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wider">Lifetime Hours Learned</span>
+                      <div className="text-2xl font-extrabold font-mono text-brand-800 mt-1">
+                        -{currentUser.sessionsLearned || 0} Credits
+                      </div>
+                      <span className="text-xs text-indigo-700 mt-1 block">Peer sessions received</span>
+                    </div>
+
+                  </div>
+
+                  {/* Ledger Table */}
+                  <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                    <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+                      <div>
+                        <h3 className="text-base font-bold text-slate-900">Campus Time-Banking Ledger</h3>
+                        <p className="text-xs text-slate-500">Immutable ledger log for student {currentUser.name}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-semibold bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                        <i data-lucide="shield-check" className="w-3.5 h-3.5"></i>
+                        <span>Ledger Integrity Verified</span>
+                      </div>
+                    </div>
+
+                    {ledger.filter(l => l.userId === currentUser.id).length === 0 ? (
+                      <div className="text-center py-12 text-slate-500 text-sm">
+                        No ledger transactions recorded yet.
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs">
+                          <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider border-b border-slate-200">
+                            <tr>
+                              <th className="py-3 px-4 font-semibold">Transaction / Description</th>
+                              <th className="py-3 px-4 font-semibold">Counterparty</th>
+                              <th className="py-3 px-4 font-semibold">Credit Change</th>
+                              <th className="py-3 px-4 font-semibold">New Balance</th>
+                              <th className="py-3 px-4 font-semibold">Timestamp</th>
+                              <th className="py-3 px-4 font-semibold">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 font-medium">
+                            {ledger
+                              .filter(l => l.userId === currentUser.id)
+                              .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                              .map(tx => {
+                                const isPositive = tx.amount > 0;
+                                return (
+                                  <tr key={tx.id} className="hover:bg-slate-50/80 transition">
+                                    <td className="py-3.5 px-4 font-semibold text-slate-800">
+                                      <div className="flex items-center gap-2">
+                                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
+                                          tx.type === 'credit_bonus' ? 'bg-amber-100 text-amber-700' :
+                                          isPositive ? 'bg-emerald-100 text-accent-700' : 'bg-brand-100 text-brand-700'
+                                        }`}>
+                                          {tx.type === 'credit_bonus' ? '🎁' : isPositive ? '+' : '-'}
+                                        </span>
+                                        <span>{tx.description}</span>
+                                      </div>
+                                    </td>
+                                    <td className="py-3.5 px-4 text-slate-600">
+                                      {tx.partnerName}
+                                    </td>
+                                    <td className="py-3.5 px-4 font-mono font-bold text-sm">
+                                      <span className={isPositive ? 'text-accent-600' : 'text-indigo-600'}>
+                                        {isPositive ? `+${tx.amount}` : tx.amount} cr
+                                      </span>
+                                    </td>
+                                    <td className="py-3.5 px-4 font-mono text-slate-700">
+                                      {tx.balanceAfter} cr
+                                    </td>
+                                    <td className="py-3.5 px-4 text-slate-500">
+                                      {new Date(tx.timestamp).toLocaleDateString()} {new Date(tx.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </td>
+                                    <td className="py-3.5 px-4">
+                                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold">
+                                        Settled
+                                      </span>
+                                    </td>
+                                  </tr>
+                                );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+
+                  </div>
+
+                </div>
+              )}
+
+              {/* TAB 3: MY SESSIONS & BOOKINGS (INTERACTIVE COMPLETION) */}
+              {dashboardTab === 'sessions' && (
+                <div className="space-y-6">
+                  
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900">My Barter Bookings & Sessions</h3>
+                      <p className="text-xs text-slate-500">
+                        Confirm completion of past sessions to automatically transfer +1/-1 credit in the ledger.
+                      </p>
+                    </div>
+
+                    <div className="text-xs bg-slate-100 p-1.5 rounded-xl border border-slate-200 flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                      <span className="font-medium text-slate-700">
+                        Total Sessions: {sessions.filter(s => s.teacherId === currentUser.id || s.learnerId === currentUser.id).length}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Sessions List */}
+                  {sessions.filter(s => s.teacherId === currentUser.id || s.learnerId === currentUser.id).length === 0 ? (
+                    <div className="text-center py-16 bg-white rounded-2xl border border-slate-200 p-8">
+                      <div className="w-16 h-16 rounded-2xl bg-brand-50 text-brand-500 flex items-center justify-center mx-auto mb-3">
+                        <i data-lucide="calendar" className="w-8 h-8"></i>
+                      </div>
+                      <h4 className="text-base font-bold text-slate-800">No active bookings yet</h4>
+                      <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1">
+                        Go to the Marketplace to book a tutor or propose teaching a fellow student.
+                      </p>
+                      <button
+                        onClick={() => setCurrentView('marketplace')}
+                        className="mt-4 px-4 py-2 bg-brand-600 text-white rounded-lg text-xs font-semibold hover:bg-brand-700"
+                      >
+                        Explore Marketplace
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {sessions
+                        .filter(s => s.teacherId === currentUser.id || s.learnerId === currentUser.id)
+                        .map(session => {
+                          const isTeacher = session.teacherId === currentUser.id;
+                          const partnerName = isTeacher ? session.learnerName : session.teacherName;
+                          const partnerAvatar = isTeacher ? session.learnerAvatar : session.teacherAvatar;
+                          const roleLabel = isTeacher ? 'Teaching (You will earn +1 credit)' : 'Learning (You will spend -1 credit)';
+
+                          return (
+                            <div
+                              key={session.id}
+                              className={`bg-white rounded-2xl border p-5 shadow-xs transition ${
+                                session.status === 'pending' ? 'border-amber-200 bg-amber-50/20' :
+                                session.status === 'confirmed' ? 'border-brand-200' :
+                                session.status === 'completed' ? 'border-emerald-200' : 'border-slate-200'
+                              }`}
+                            >
+                              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                
+                                {/* Left details */}
+                                <div className="space-y-2">
+                                  
+                                  {/* Status & Role Pill */}
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${
+                                      session.status === 'pending' ? 'bg-amber-100 text-amber-800 border border-amber-300' :
+                                      session.status === 'confirmed' ? 'bg-indigo-100 text-brand-800 border border-brand-200' :
+                                      session.status === 'completed' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' :
+                                      'bg-slate-100 text-slate-600'
+                                    }`}>
+                                      ● {session.status}
+                                    </span>
+
+                                    <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
+                                      isTeacher ? 'bg-emerald-50 text-accent-700 border border-emerald-200' : 'bg-brand-50 text-brand-700 border border-brand-200'
+                                    }`}>
+                                      {roleLabel}
+                                    </span>
+                                  </div>
+
+                                  {/* Subject Title */}
+                                  <h4 className="text-base font-bold text-slate-900">
+                                    {session.skillTitle}
+                                  </h4>
+
+                                  {/* Partner & Logistics info */}
+                                  <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600 pt-1">
+                                    <div className="flex items-center gap-2">
+                                      <img src={partnerAvatar} className="w-5 h-5 rounded-full object-cover" />
+                                      <span>Partner: <strong>{partnerName}</strong></span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                      <i data-lucide="calendar" className="w-3.5 h-3.5 text-slate-400"></i>
+                                      <span>{session.scheduledDate} at {session.scheduledTime}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                      <i data-lucide="map-pin" className="w-3.5 h-3.5 text-slate-400"></i>
+                                      <span>{session.locationDetails}</span>
+                                    </div>
+                                  </div>
+
+                                  {/* Session Notes if any */}
+                                  {session.notes && (
+                                    <div className="text-xs text-slate-500 bg-slate-50 p-2.5 rounded-lg border border-slate-100 mt-2">
+                                      <strong>Notes:</strong> {session.notes}
+                                    </div>
+                                  )}
+
+                                  {/* Completed review text if available */}
+                                  {session.status === 'completed' && session.reviewText && (
+                                    <div className="text-xs text-emerald-800 bg-emerald-50/60 p-2.5 rounded-lg border border-emerald-200/60 mt-2">
+                                      <strong>Review ({session.ratingGiven} ★):</strong> "{session.reviewText}"
+                                    </div>
+                                  )}
+
+                                </div>
+
+                                {/* Right action buttons */}
+                                <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 shrink-0">
+                                  
+                                  {/* If Pending proposal */}
+                                  {session.status === 'pending' && (
+                                    <>
+                                      <button
+                                        onClick={() => handleAcceptSession(session.id)}
+                                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center gap-1.5 transition"
+                                      >
+                                        <i data-lucide="check" className="w-3.5 h-3.5"></i>
+                                        <span>Accept Proposal</span>
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeclineSession(session.id)}
+                                        className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold transition"
+                                      >
+                                        Decline
+                                      </button>
+                                    </>
+                                  )}
+
+                                  {/* If Confirmed -> CAN CONFIRM COMPLETION & SETTLE TIME-BANK */}
+                                  {session.status === 'confirmed' && (
+                                    <button
+                                      onClick={() => setCompletionModalSession(session)}
+                                      className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 flex items-center gap-2 animate-pulse-subtle transition"
+                                    >
+                                      <i data-lucide="check-circle" className="w-4 h-4"></i>
+                                      <span>Mark Completed & Settle Credits</span>
+                                    </button>
+                                  )}
+
+                                  {/* If Completed */}
+                                  {session.status === 'completed' && (
+                                    <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-bold bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
+                                      <i data-lucide="check-check" className="w-4 h-4"></i>
+                                      <span>Credit Settled</span>
+                                    </div>
+                                  )}
+
+                                </div>
+
+                              </div>
+                            </div>
+                          );
+                      })}
+                    </div>
+                  )}
+
+                </div>
+              )}
+
+              {/* TAB 4: ADD / EDIT SKILLS TAB */}
+              {dashboardTab === 'add-skill' && (
+                <div className="max-w-2xl mx-auto bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
+                  
+                  <div className="mb-6">
+                    <h3 className="text-xl font-extrabold text-slate-900">List a New Campus Skill</h3>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Choose whether you want to teach a skill to earn credits, or post a learning request for a tutor.
+                    </p>
+                  </div>
+
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target);
+                    handleAddSkill({
+                      type: formData.get('type'),
+                      title: formData.get('title'),
+                      category: formData.get('category'),
+                      level: formData.get('level'),
+                      description: formData.get('description'),
+                      location: formData.get('location'),
+                      availability: formData.get('availability')
+                    });
+                  }} className="space-y-5">
+                    
+                    {/* Mode selection radio */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                        Listing Goal
+                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <label className="flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/40">
+                          <input type="radio" name="type" value="teaching" defaultChecked className="text-emerald-600 focus:ring-emerald-500" />
+                          <div>
+                            <div className="text-xs font-bold text-slate-900">🎓 I Want to TEACH</div>
+                            <div className="text-[11px] text-slate-500">Earn +1 Credit per hour</div>
+                          </div>
+                        </label>
+
+                        <label className="flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition has-[:checked]:border-purple-500 has-[:checked]:bg-purple-50/40">
+                          <input type="radio" name="type" value="learning" className="text-purple-600 focus:ring-purple-500" />
+                          <div>
+                            <div className="text-xs font-bold text-slate-900">🙋 I Want to LEARN</div>
+                            <div className="text-[11px] text-slate-500">Spend 1 Credit per hour</div>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Title */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Skill Title</label>
+                      <input
+                        type="text"
+                        name="title"
+                        required
+                        placeholder="e.g. Data Structures in C++, Conversational Japanese, Guitar Basics..."
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-hidden"
+                      />
+                    </div>
+
+                    {/* Category & Level */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Category</label>
+                        <select
+                          name="category"
+                          required
+                          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-hidden"
+                        >
+                          {CATEGORIES.filter(c => c !== 'All Categories').map(cat => (
+                            <option key={cat} value={cat}>{cat}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Proficiency / Target Level</label>
+                        <select
+                          name="level"
+                          required
+                          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-hidden"
+                        >
+                          <option value="Beginner">Beginner Friendly</option>
+                          <option value="Intermediate">Intermediate</option>
+                          <option value="Advanced">Advanced</option>
+                          <option value="All Levels">All Levels Welcome</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Description & What We Will Cover</label>
+                      <textarea
+                        name="description"
+                        required
+                        rows="3"
+                        placeholder="Outline what you can teach (or what you need help with), topics, prerequisites, and expected outcomes..."
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-hidden"
+                      ></textarea>
+                    </div>
+
+                    {/* Location & Availability */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Preferred Location</label>
+                        <input
+                          type="text"
+                          name="location"
+                          required
+                          placeholder="e.g. Science Library, Campus Quad, Online (Zoom)"
+                          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-hidden"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Weekly Availability</label>
+                        <input
+                          type="text"
+                          name="availability"
+                          required
+                          placeholder="e.g. Weekday afternoons, Weekend mornings"
+                          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-hidden"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Submit Button */}
+                    <div className="pt-2">
+                      <button
+                        type="submit"
+                        className="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-md transition"
+                      >
+                        Publish Skill to Campus Marketplace
+                      </button>
+                    </div>
+
+                  </form>
+
+                </div>
+              )}
+
+            </main>
+          )}
+
+          {/* BOOK SESSION / BARTER PROPOSAL MODAL */}
+          {bookingModalSkill && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+              <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 border border-slate-200 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+                
+                <button
+                  onClick={() => setBookingModalSkill(null)}
+                  className="absolute right-5 top-5 text-slate-400 hover:text-slate-700"
+                >
+                  <i data-lucide="x" className="w-5 h-5"></i>
+                </button>
+
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center">
+                    <i data-lucide="calendar-plus" className="w-5 h-5"></i>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900">
+                      {bookingModalSkill.type === 'teaching' ? 'Request Barter Session' : 'Offer to Teach Peer'}
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      With {bookingModalSkill.userName} ({bookingModalSkill.userMajor})
+                    </p>
+                  </div>
+                </div>
+
+                {/* Skill summary box */}
+                <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-200 mb-5 text-xs">
+                  <div className="font-semibold text-slate-800">{bookingModalSkill.title}</div>
+                  <div className="text-slate-500 mt-1">Suggested location: {bookingModalSkill.location}</div>
+                  <div className="mt-2 flex items-center justify-between text-[11px] font-mono pt-2 border-t border-slate-200/80">
+                    <span className="text-slate-500">Time-Bank Ledger Transfer:</span>
+                    <span className="font-bold text-brand-600">
+                      {bookingModalSkill.type === 'teaching' ? '-1 Credit (From You)' : '+1 Credit (To You)'}
+                    </span>
+                  </div>
+                </div>
+
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.target);
+                  handleCreateBooking({
+                    skill: bookingModalSkill,
+                    date: formData.get('date'),
+                    time: formData.get('time'),
+                    locationType: formData.get('locationType'),
+                    locationDetails: formData.get('locationDetails'),
+                    notes: formData.get('notes')
+                  });
+                }} className="space-y-4">
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Proposed Date</label>
+                      <input
+                        type="date"
+                        name="date"
+                        required
+                        defaultValue="2026-11-15"
+                        className="w-full px-3 py-2 border rounded-xl text-xs focus:ring-2 focus:ring-brand-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Proposed Time</label>
+                      <input
+                        type="time"
+                        name="time"
+                        required
+                        defaultValue="14:00"
+                        className="w-full px-3 py-2 border rounded-xl text-xs focus:ring-2 focus:ring-brand-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Meeting Format & Place</label>
+                    <input
+                      type="text"
+                      name="locationDetails"
+                      required
+                      defaultValue={bookingModalSkill.location}
+                      className="w-full px-3 py-2 border rounded-xl text-xs focus:ring-2 focus:ring-brand-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Message / Learning Goals</label>
+                    <textarea
+                      name="notes"
+                      rows="2"
+                      placeholder="Share what specific questions or topics you want to prioritize during this session..."
+                      className="w-full px-3 py-2 border rounded-xl text-xs focus:ring-2 focus:ring-brand-500"
+                    ></textarea>
+                  </div>
+
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      className="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-md transition"
+                    >
+                      Send Barter Proposal
+                    </button>
+                  </div>
+                </form>
+
+              </div>
+            </div>
+          )}
+
+          {/* CONFIRM COMPLETION & TIME-BANK SETTLEMENT MODAL */}
+          {completionModalSession && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+              <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 border border-slate-200 shadow-2xl relative animate-in fade-in zoom-in-95">
+                
+                <button
+                  onClick={() => setCompletionModalSession(null)}
+                  className="absolute right-5 top-5 text-slate-400 hover:text-slate-700"
+                >
+                  <i data-lucide="x" className="w-5 h-5"></i>
+                </button>
+
+                <div className="text-center mb-5">
+                  <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3">
+                    <i data-lucide="check-circle-2" className="w-8 h-8"></i>
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900">Confirm Session Completion</h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    This action will immediately execute the Time-Banking Credit Ledger transfer.
+                  </p>
+                </div>
+
+                {/* Ledger preview breakdown */}
+                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 text-xs space-y-2 mb-5">
+                  <div className="font-semibold text-slate-900">{completionModalSession.skillTitle}</div>
+                  <div className="flex justify-between text-slate-600 pt-2 border-t border-slate-200">
+                    <span>Teacher ({completionModalSession.teacherName}):</span>
+                    <span className="font-bold text-accent-600 font-mono">+1.0 Credit</span>
+                  </div>
+                  <div className="flex justify-between text-slate-600">
+                    <span>Learner ({completionModalSession.learnerName}):</span>
+                    <span className="font-bold text-indigo-600 font-mono">-1.0 Credit</span>
+                  </div>
+                </div>
+
+                {/* Rating & Review Form */}
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.target);
+                  const rating = Number(formData.get('rating') || 5);
+                  const review = formData.get('review') || 'Great peer session!';
+                  handleCompleteSession(completionModalSession, rating, review);
+                }} className="space-y-4">
+                  
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Student Rating</label>
+                    <select
+                      name="rating"
+                      defaultValue="5"
+                      className="w-full px-3 py-2 border rounded-xl text-xs focus:ring-2 focus:ring-brand-500"
+                    >
+                      <option value="5">★★★★★ 5 Stars (Exceptional Mentor)</option>
+                      <option value="4">★★★★☆ 4 Stars (Very Good)</option>
+                      <option value="3">★★★☆☆ 3 Stars (Satisfactory)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Feedback / Testimonial</label>
+                    <textarea
+                      name="review"
+                      rows="2"
+                      required
+                      defaultValue="Very helpful and clear explanation. Highly recommend!"
+                      className="w-full px-3 py-2 border rounded-xl text-xs focus:ring-2 focus:ring-brand-500"
+                    ></textarea>
+                  </div>
+
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition"
+                    >
+                      Verify & Settle Time-Bank Credits
+                    </button>
+                  </div>
+
+                </form>
+
+              </div>
+            </div>
+          )}
+
+          {/* AUTHENTICATION MODAL (SIGN IN / SIGN UP) */}
+          {isAuthModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+              <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 border border-slate-200 shadow-2xl relative animate-in fade-in zoom-in-95">
+                
+                <button
+                  onClick={() => setIsAuthModalOpen(false)}
+                  className="absolute right-5 top-5 text-slate-400 hover:text-slate-700"
+                >
+                  <i data-lucide="x" className="w-5 h-5"></i>
+                </button>
+
+                {/* Tabs for Login vs Register */}
+                <div className="flex border-b border-slate-200 mb-6 text-sm font-bold">
+                  <button
+                    onClick={() => setAuthMode('login')}
+                    className={`flex-1 pb-3 text-center border-b-2 transition ${
+                      authMode === 'login' ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-400 hover:text-slate-700'
+                    }`}
+                  >
+                    Campus Login
+                  </button>
+                  <button
+                    onClick={() => setAuthMode('signup')}
+                    className={`flex-1 pb-3 text-center border-b-2 transition ${
+                      authMode === 'signup' ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-400 hover:text-slate-700'
+                    }`}
+                  >
+                    New Student Sign Up
+                  </button>
+                </div>
+
+                {authMode === 'login' ? (
+                  /* LOGIN FORM */
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target);
+                    handleLogin(formData.get('email'));
+                  }} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Campus Email</label>
+                      <input
+                        type="email"
+                        name="email"
+                        required
+                        defaultValue={currentUser.email}
+                        placeholder="e.g. aarav.sharma@campus.edu"
+                        className="w-full px-3 py-2 border rounded-xl text-xs focus:ring-2 focus:ring-brand-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Password</label>
+                      <input
+                        type="password"
+                        name="password"
+                        required
+                        defaultValue="student123"
+                        className="w-full px-3 py-2 border rounded-xl text-xs focus:ring-2 focus:ring-brand-500"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-md transition"
+                    >
+                      Sign In to Time-Bank
+                    </button>
+
+                    <div className="pt-2 text-center text-xs text-slate-400">
+                      Or quickly select a student persona from the top simulator bar.
+                    </div>
+                  </form>
+                ) : (
+                  /* SIGN UP FORM */
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target);
+                    handleSignUp({
+                      name: formData.get('name'),
+                      email: formData.get('email'),
+                      major: formData.get('major'),
+                      gradYear: formData.get('gradYear'),
+                      bio: formData.get('bio')
+                    });
+                  }} className="space-y-3.5">
+                    
+                    <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs flex items-center gap-2">
+                      <span className="text-base">🎁</span>
+                      <span><strong>Campus Verification Bonus:</strong> You receive 3 free time credits upon registration!</span>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Full Student Name</label>
+                      <input
+                        type="text"
+                        name="name"
+                        required
+                        placeholder="e.g. Maya Lin"
+                        className="w-full px-3 py-2 border rounded-xl text-xs focus:ring-2 focus:ring-brand-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Campus Email (.edu / university)</label>
+                      <input
+                        type="email"
+                        name="email"
+                        required
+                        placeholder="maya.lin@campus.edu"
+                        className="w-full px-3 py-2 border rounded-xl text-xs focus:ring-2 focus:ring-brand-500"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Major / Department</label>
+                        <input
+                          type="text"
+                          name="major"
+                          required
+                          placeholder="e.g. Bioengineering"
+                          className="w-full px-3 py-2 border rounded-xl text-xs focus:ring-2 focus:ring-brand-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Graduation Year</label>
+                        <input
+                          type="text"
+                          name="gradYear"
+                          required
+                          placeholder="2027"
+                          className="w-full px-3 py-2 border rounded-xl text-xs focus:ring-2 focus:ring-brand-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Short Bio</label>
+                      <input
+                        type="text"
+                        name="bio"
+                        placeholder="What do you love studying or teaching?"
+                        className="w-full px-3 py-2 border rounded-xl text-xs focus:ring-2 focus:ring-brand-500"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-md transition"
+                    >
+                      Complete Sign-Up & Claim 3 Credits
+                    </button>
+                  </form>
+                )}
+
+              </div>
+            </div>
+          )}
+
+          {/* FOOTER */}
+          <footer className="mt-auto bg-white border-t border-slate-200 py-8 text-xs text-slate-500">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-slate-800">SkillBarter Campus</span>
+                <span>•</span>
+                <span>On-Campus Peer Time-Banking Network</span>
+              </div>
+              <div className="flex items-center gap-4">
+                <span>Semester 3 Mini Project</span>
+                <span>•</span>
+                <span>1 Hour Taught = +1 Credit | 1 Hour Learned = -1 Credit</span>
+              </div>
+            </div>
+          </footer>
+
+        </div>
+      );
+    }
+
+    // Render the React application
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
